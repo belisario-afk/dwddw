@@ -15,6 +15,8 @@ class AudioEngine {
   private posture: Posture = 'standing';
   private smoothingFactor: number = 0.8;
   private lastFrequencyData: Float32Array | null = null;
+  private sensationEnabled: boolean = true;
+  private currentPosition: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
   
   // Frequency bands for visualization
   private bassRange = { min: 0, max: 250 };
@@ -94,6 +96,7 @@ class AudioEngine {
     if (!this.pannerNode || !this.audioContext) return;
     
     const transformed = this.transformCoordinates(x, y, z);
+    this.currentPosition = transformed;
     const currentTime = this.audioContext.currentTime;
     
     this.pannerNode.positionX.setValueAtTime(transformed.x, currentTime);
@@ -140,6 +143,12 @@ class AudioEngine {
   // Update sensation filter based on distance to listener
   private updateSensationFilter(pos: { x: number; y: number; z: number }): void {
     if (!this.sensationFilter) return;
+    
+    // Only apply sensation if enabled
+    if (!this.sensationEnabled) {
+      this.sensationFilter.gain.value = 0;
+      return;
+    }
     
     const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
     
@@ -241,11 +250,9 @@ class AudioEngine {
 
   // Set sensation filter enabled/disabled
   setSensationEnabled(enabled: boolean): void {
-    // This controls whether the sensation filter effect is allowed
-    // The actual activation still depends on proximity
-    if (!enabled && this.sensationFilter) {
-      this.sensationFilter.gain.value = 0;
-    }
+    this.sensationEnabled = enabled;
+    // Re-evaluate sensation filter based on current position
+    this.updateSensationFilter(this.currentPosition);
   }
 
   // Clean up resources

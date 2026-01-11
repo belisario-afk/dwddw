@@ -113,10 +113,11 @@ function generateNeckWhisperPath(): PathPoint[] {
   for (let i = 0; i < steps; i++) {
     const t = (i / steps) * duration;
     const angle = (i / steps) * Math.PI * 0.5; // Quarter circle behind
+    const progressValue = i / steps;
     // Whisper near neck from behind
     path.push({
       x: Math.sin(angle) * 0.2,
-      y: 1.5 + Math.sin(progress(i, steps) * Math.PI) * 0.1, // Slight vertical movement
+      y: 1.5 + Math.sin(progressValue * Math.PI) * 0.1, // Slight vertical movement
       z: -0.3 - Math.cos(angle) * 0.1, // Behind the listener
       t,
     });
@@ -141,10 +142,6 @@ function generate360OrbitPath(): PathPoint[] {
     });
   }
   return path;
-}
-
-function progress(i: number, total: number): number {
-  return i / total;
 }
 
 export const storage = new Storage();

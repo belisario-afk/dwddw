@@ -72,11 +72,21 @@ function SoundOrb() {
   const glowRef = useRef<THREE.Mesh>(null);
   const { orbPosition, setOrbPosition, isRecording, isPlaying, currentPath, playbackIndex, setPlaybackIndex } = useStudioStore();
   const transformRef = useRef<any>(null);
+  const playbackStartTime = useRef<number>(0);
+  const pathStartTime = useRef<number>(0);
   
   // Update audio engine position when orb moves
   useEffect(() => {
     audioEngine.setPosition(orbPosition.x, orbPosition.y, orbPosition.z);
   }, [orbPosition]);
+  
+  // Reset playback timing when playback starts
+  useEffect(() => {
+    if (isPlaying && currentPath.length > 0) {
+      playbackStartTime.current = Date.now();
+      pathStartTime.current = currentPath[0].t;
+    }
+  }, [isPlaying, currentPath]);
   
   // Handle transform controls changes
   const handleTransform = () => {
@@ -86,13 +96,35 @@ function SoundOrb() {
     }
   };
   
-  // Playback animation
+  // Playback animation with proper timing
   useFrame(() => {
     if (isPlaying && currentPath.length > 0) {
-      const nextIndex = (playbackIndex + 1) % currentPath.length;
-      setPlaybackIndex(nextIndex);
+      const now = Date.now();
+      const elapsed = now - playbackStartTime.current;
       
-      const point = currentPath[nextIndex];
+      // Find the appropriate point based on elapsed time
+      let targetIndex = playbackIndex;
+      for (let i = playbackIndex; i < currentPath.length; i++) {
+        const pointTime = currentPath[i].t - pathStartTime.current;
+        if (pointTime <= elapsed) {
+          targetIndex = i;
+        } else {
+          break;
+        }
+      }
+      
+      // Loop back to start if we've completed the path
+      if (targetIndex >= currentPath.length - 1) {
+        playbackStartTime.current = now;
+        pathStartTime.current = currentPath[0].t;
+        targetIndex = 0;
+      }
+      
+      if (targetIndex !== playbackIndex) {
+        setPlaybackIndex(targetIndex);
+      }
+      
+      const point = currentPath[targetIndex];
       if (orbRef.current) {
         orbRef.current.position.set(point.x, point.y, point.z);
         setOrbPosition({ x: point.x, y: point.y, z: point.z });

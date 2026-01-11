@@ -92,16 +92,19 @@ class AudioEngine {
   }
 
   // Set spatial position with coordinate transformation based on posture
+  // Uses smooth ramping for better audio experience when moving
   setPosition(x: number, y: number, z: number): void {
     if (!this.pannerNode || !this.audioContext) return;
     
     const transformed = this.transformCoordinates(x, y, z);
     this.currentPosition = transformed;
     const currentTime = this.audioContext.currentTime;
+    const rampDuration = 0.05; // 50ms smooth transition
     
-    this.pannerNode.positionX.setValueAtTime(transformed.x, currentTime);
-    this.pannerNode.positionY.setValueAtTime(transformed.y, currentTime);
-    this.pannerNode.positionZ.setValueAtTime(transformed.z, currentTime);
+    // Use linearRampToValueAtTime for smoother audio panning
+    this.pannerNode.positionX.linearRampToValueAtTime(transformed.x, currentTime + rampDuration);
+    this.pannerNode.positionY.linearRampToValueAtTime(transformed.y, currentTime + rampDuration);
+    this.pannerNode.positionZ.linearRampToValueAtTime(transformed.z, currentTime + rampDuration);
     
     // Update sensation filter based on distance
     this.updateSensationFilter(transformed);

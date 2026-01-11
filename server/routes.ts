@@ -122,11 +122,7 @@ router.delete('/presets/:id', async (req, res) => {
 
 // Initialize and seed presets
 export async function initializeDatabase() {
-  try {
-    await storage.seedPresets();
-  } catch (error) {
-    console.error('Database initialization error:', error);
-  }
+  await storage.seedPresets();
 }
 
 export default router;

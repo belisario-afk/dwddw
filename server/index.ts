@@ -39,8 +39,14 @@ if (process.env.NODE_ENV === 'production') {
 // Start server
 async function start() {
   try {
-    // Initialize database and seed presets
-    await initializeDatabase();
+    // Try to initialize database, but don't fail if unavailable
+    try {
+      await initializeDatabase();
+      console.log('✓ Database connected and seeded');
+    } catch (dbError) {
+      console.warn('⚠ Database not available - running without persistence');
+      console.warn('  Presets will not be saved. Set DATABASE_URL to enable.');
+    }
     
     app.listen(PORT, () => {
       console.log(`✓ SDF Spatial Studio server running on port ${PORT}`);
